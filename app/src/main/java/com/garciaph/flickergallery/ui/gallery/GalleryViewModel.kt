@@ -6,14 +6,15 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
-import com.garciaph.flickergallery.apis.flickr.pagination.FlickrPagingSource
-import com.garciaph.flickergallery.domain.PhotoRepository
+import com.garciaph.flickergallery.data.pagination.FlickrPagingSource
+import com.garciaph.flickergallery.domain.IPhotoRepository
+import com.garciaph.flickergallery.data.PhotoRepositoryImpl
 import com.garciaph.flickergallery.domain.entities.Photo
 import timber.log.Timber
 
 class GalleryViewModel : ViewModel() {
 
-    private val repository = PhotoRepository()
+    private val repository: IPhotoRepository = PhotoRepositoryImpl()
 
     private var pagingDataSource: LiveData<PagingData<Photo>>? = null
 

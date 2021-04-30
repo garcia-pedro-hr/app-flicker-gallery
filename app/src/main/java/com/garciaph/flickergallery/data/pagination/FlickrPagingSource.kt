@@ -1,9 +1,9 @@
-package com.garciaph.flickergallery.apis.flickr.pagination
+package com.garciaph.flickergallery.data.pagination
 
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
-import com.garciaph.flickergallery.apis.flickr.FlickrApi
-import com.garciaph.flickergallery.apis.flickr.responses.SizeLabel
+import com.garciaph.flickergallery.data.apis.flickr.FlickrApi
+import com.garciaph.flickergallery.data.apis.flickr.responses.SizeLabel
 import com.garciaph.flickergallery.domain.entities.Photo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

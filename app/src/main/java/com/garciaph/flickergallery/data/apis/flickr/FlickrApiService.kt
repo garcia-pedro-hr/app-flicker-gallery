@@ -1,14 +1,14 @@
-package com.garciaph.flickergallery.apis.flickr
+package com.garciaph.flickergallery.data.apis.flickr
 
-import com.garciaph.flickergallery.apis.flickr.responses.GetSizesResponse
-import com.garciaph.flickergallery.apis.flickr.responses.SearchResponse
+import com.garciaph.flickergallery.data.apis.flickr.responses.GetSizesResponse
+import com.garciaph.flickergallery.data.apis.flickr.responses.SearchResponse
 import retrofit2.http.GET
 import retrofit2.http.Query
 
 interface FlickrApiService {
 
     companion object {
-        private const val KEY = "9a95c68a9c6ec61104cd3967dcbb8bd3"
+        private const val KEY = "0f6d576dfc6b5807a6b50d62a2802504"
 
         private const val METHOD_PHOTOS_SEARCH = "flickr.photos.search"
         private const val METHOD_PHOTOS_GET_SIZES = "flickr.photos.getSizes"

@@ -1,4 +1,4 @@
-package com.garciaph.flickergallery.apis.flickr.responses
+package com.garciaph.flickergallery.data.apis.flickr.responses
 
 import com.squareup.moshi.Json
 
