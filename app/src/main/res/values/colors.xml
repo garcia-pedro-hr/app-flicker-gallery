@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">@color/flickr_purple</color>
+    <color name="colorPrimaryDark">@color/flickr_purple</color>
+    <color name="colorAccent">@color/flickr_pink</color>
+
+    <color name="flickr_pink">#f4427e</color>
+    <color name="flickr_purple">#495ed3</color>
+
+    <color name="background_off_color">#EBEBFF</color>
+</resources>
