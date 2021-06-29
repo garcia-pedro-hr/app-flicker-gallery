@@ -1,10 +1,10 @@
-package com.garciaph.flickergallery.data.apis.flickr.responses
+package com.garciaph.flickergallery.data.network.flickr.responses
 
 import com.squareup.moshi.Json
 
-data class SearchResponse (
+data class SearchResponse(
     val stat: String,
-    val photos: SearchData
+    @Json(name="photos") val data: SearchData
 )
 
 data class SearchData(
@@ -12,10 +12,10 @@ data class SearchData(
     val pages: Int,
     @Json(name="perpage") val perPage: Int,
     val total: Long,
-    val photo: List<Photo>
+    @Json(name="photo") val photos: List<PhotoData>
 )
 
-data class Photo (
+data class PhotoData (
     val id: Long,
     val owner: String,
     val secret: String,

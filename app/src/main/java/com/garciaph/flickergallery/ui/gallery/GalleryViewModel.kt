@@ -1,20 +1,14 @@
 package com.garciaph.flickergallery.ui.gallery
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MediatorLiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.*
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.garciaph.flickergallery.data.pagination.FlickrPagingSource
 import com.garciaph.flickergallery.domain.IPhotoRepository
-import com.garciaph.flickergallery.data.PhotoRepositoryImpl
 import com.garciaph.flickergallery.domain.entities.Photo
 import timber.log.Timber
 
-class GalleryViewModel : ViewModel() {
-
-    private val repository: IPhotoRepository = PhotoRepositoryImpl()
+class GalleryViewModel(private val repository: IPhotoRepository) : ViewModel() {
 
     private var pagingDataSource: LiveData<PagingData<Photo>>? = null
 
@@ -26,7 +20,7 @@ class GalleryViewModel : ViewModel() {
     internal val loading: LiveData<Boolean>
         get() = _loading
 
-    private val loadListener = object : FlickrPagingSource.IOnLoadListener {
+    private val loadListener = object : IPhotoRepository.IOnLoadListener {
         override fun onLoadStarted() {
             Timber.d("onLoadStarted")
             _loading.value = true
@@ -39,8 +33,22 @@ class GalleryViewModel : ViewModel() {
     }
 
     fun fetchPhotos(tags: String) {
+        Timber.d("fetchPhotos: tags=$tags")
         pagingDataSource?.let { _photosPager.removeSource(it) }
-        pagingDataSource = repository.fetchPhotosPager(tags, loadListener).cachedIn(this)
+
+        /* Flow<PagingData> has a handy cachedIn() method that makes the data stream shareable and
+           allows you to cache the content of a Flow<PagingData> in a CoroutineScope.
+           That way if you implement any transformations on the data stream, they will not be
+           triggered again each time you collect the flow after Activity recreation.
+           The caching should be done as close to the UI layer as possible, but not in the UI layer,
+           as we want to make sure it persists beyond configuration change.
+           The best place for this would be in a ViewModel, using the viewModelScope. */
+
+        pagingDataSource = repository
+            .fetchPhotosPager(tags, loadListener)
+            .cachedIn(viewModelScope)
+            .asLiveData()
+
         _photosPager.addSource(pagingDataSource!!) { _photosPager.value = it }
     }
 }

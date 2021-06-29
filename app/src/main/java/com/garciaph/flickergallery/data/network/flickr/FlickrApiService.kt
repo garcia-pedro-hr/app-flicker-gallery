@@ -1,22 +1,22 @@
-package com.garciaph.flickergallery.data.apis.flickr
+package com.garciaph.flickergallery.data.network.flickr
 
-import com.garciaph.flickergallery.data.apis.flickr.responses.GetSizesResponse
-import com.garciaph.flickergallery.data.apis.flickr.responses.SearchResponse
+import com.garciaph.flickergallery.data.network.flickr.responses.GetSizesResponse
+import com.garciaph.flickergallery.data.network.flickr.responses.SearchResponse
+import com.garciaph.flickergallery.data.pagination.FlickrPagingSource
 import retrofit2.http.GET
 import retrofit2.http.Query
 
 interface FlickrApiService {
 
     companion object {
-        private const val KEY = "0f6d576dfc6b5807a6b50d62a2802504"
+        private const val KEY = "" /* Add a Flickr API key string*/
 
         private const val METHOD_PHOTOS_SEARCH = "flickr.photos.search"
         private const val METHOD_PHOTOS_GET_SIZES = "flickr.photos.getSizes"
 
-        const val PHOTOS_PER_PAGE = 30
-
         private const val QUERY_SEARCH_PHOTOS = "?method=$METHOD_PHOTOS_SEARCH&api_key=$KEY" +
-                "&per_page=$PHOTOS_PER_PAGE&extras=owner_name&format=json&nojsoncallback=1"
+                "&per_page=${FlickrPagingSource.PHOTOS_PER_PAGE}&extras=owner_name" +
+                "&format=json&nojsoncallback=1"
         private const val QUERY_GET_SIZES = "?method=$METHOD_PHOTOS_GET_SIZES&api_key=$KEY" +
                 "&format=json&nojsoncallback=1"
     }

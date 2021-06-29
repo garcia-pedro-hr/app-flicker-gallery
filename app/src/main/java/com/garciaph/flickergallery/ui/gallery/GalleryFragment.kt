@@ -17,8 +17,11 @@ import androidx.recyclerview.widget.LinearSmoothScroller
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.appbar.AppBarLayout
 import com.garciaph.flickergallery.R
+import com.garciaph.flickergallery.data.PhotoRepositoryImpl
+import com.garciaph.flickergallery.data.network.flickr.FlickrApi
 import com.garciaph.flickergallery.domain.entities.Photo
 import com.garciaph.flickergallery.ui.gallery.adapters.PhotosAdapter
+import com.garciaph.flickergallery.ui.gallery.factories.GalleryViewModelFactory
 import com.garciaph.flickergallery.utils.hideKeyboard
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -26,7 +29,9 @@ import timber.log.Timber
 
 class GalleryFragment : Fragment() {
 
-    private val viewModel: GalleryViewModel by viewModels()
+    private val viewModel: GalleryViewModel by viewModels {
+        GalleryViewModelFactory(PhotoRepositoryImpl(FlickrApi.retrofitService))
+    }
 
     private val photosAdapter: PhotosAdapter by lazy {
         PhotosAdapter(object : PhotosAdapter.IOnItemClickListener<Photo> {

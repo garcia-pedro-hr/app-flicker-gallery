@@ -1,7 +1,7 @@
-package com.garciaph.flickergallery.data.apis.flickr
+package com.garciaph.flickergallery.data.network.flickr
 
 import com.garciaph.flickergallery.FlickerGalleryApplication
-import com.garciaph.flickergallery.data.apis.flickr.responses.SizeLabel
+import com.garciaph.flickergallery.data.network.flickr.responses.SizeLabel
 import com.garciaph.flickergallery.utils.hasNetworkConnection
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory

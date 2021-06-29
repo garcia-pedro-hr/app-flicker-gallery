@@ -1,4 +1,4 @@
-package com.garciaph.flickergallery.data.apis.flickr.responses
+package com.garciaph.flickergallery.data.network.flickr.responses
 
 import com.squareup.moshi.FromJson
 import com.squareup.moshi.Json
@@ -6,17 +6,17 @@ import com.squareup.moshi.ToJson
 
 data class GetSizesResponse (
     val stat: String,
-    val sizes: GetSizesData
+    @Json(name="sizes") val data: GetSizesData
 )
 
 data class GetSizesData (
     @Json(name="canblog") val canBlog: Int,
     @Json(name="canprint") val canPrint: Int,
     @Json(name="candownload") val canDownload: Int,
-    val size: List<Size>
+    @Json(name="size") val sizes: List<SizeData>
 )
 
-data class Size (
+data class SizeData (
     val label: SizeLabel,
     val width: Int,
     val height: Int,
@@ -46,7 +46,7 @@ enum class SizeLabel(val jsonName: String) {
     ORIGINAL("Original"),
     OTHER("Other");
 
-    class Adapter() {
+    class Adapter {
         @ToJson
         fun toJson(label: SizeLabel) = label.jsonName
 

@@ -2,21 +2,31 @@ package com.garciaph.flickergallery.data.pagination
 
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
-import com.garciaph.flickergallery.data.apis.flickr.FlickrApi
-import com.garciaph.flickergallery.data.apis.flickr.responses.SizeLabel
+import com.garciaph.flickergallery.data.network.flickr.FlickrApiService
+import com.garciaph.flickergallery.data.network.flickr.mappers.FlickrApiMapperImpl
+import com.garciaph.flickergallery.data.network.flickr.responses.SizeData
+import com.garciaph.flickergallery.data.network.flickr.responses.SizeLabel
+import com.garciaph.flickergallery.domain.IPhotoRepository
 import com.garciaph.flickergallery.domain.entities.Photo
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import retrofit2.HttpException
 import timber.log.Timber
 import java.io.IOException
 
+/**
+ * FlickrPagingSource acts here as a repository and the load function gets the data from the API.
+ * In PagingSource, we take two parameters: one of integer type that represents the page number
+ * and other of the data type we are loading.
+ */
 class FlickrPagingSource(
+    private val service: FlickrApiService,
     private val tags: String,
-    private val listener: IOnLoadListener
+    private val listener: IPhotoRepository.IOnLoadListener
 ) : PagingSource<Int, Photo>() {
+
+    companion object {
+        const val PHOTOS_PER_PAGE = 30
+    }
 
     override fun getRefreshKey(state: PagingState<Int, Photo>): Int? =
         state.anchorPosition?.let {
@@ -24,83 +34,66 @@ class FlickrPagingSource(
                 ?: state.closestPageToPosition(it)?.nextKey?.minus(1)
         }
 
-    override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Photo> {
-        val position = params.key ?: 1
-
-        return try {
+    override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Photo> =
+        try {
             listener.onLoadStarted()
 
-            val photos = refreshPhotos(tags, position)
+            val currentLoadingPageKey = params.key ?: 1
+            val pageData = loadPageOfPhotos(currentLoadingPageKey)
 
             listener.onLoadFinished()
 
             LoadResult.Page(
-                data = photos,
-                prevKey = if (position == 1) null else position,
-                nextKey = if (photos.isEmpty()) null else position + 1
+                data = pageData,
+                prevKey = if (currentLoadingPageKey == 1) null else currentLoadingPageKey - 1,
+                nextKey = if (pageData.isEmpty()) null else currentLoadingPageKey + 1
             )
         } catch (exception: IOException) {
-            return LoadResult.Error(exception)
+            LoadResult.Error(exception)
         } catch (exception: HttpException) {
-            return LoadResult.Error(exception)
+            LoadResult.Error(exception)
         }
-    }
 
-    private suspend fun refreshPhotos(tags: String, page: Int): List<Photo> {
-        Timber.d("refreshPhotos: tags=$tags page=$page")
-        val searchResponse = FlickrApi.retrofitService.searchPhotosAsync(tags, page)
+    private suspend fun loadPageOfPhotos(pageKey: Int): List<Photo> {
+        Timber.d("loadPageOfPhotos: tags=$tags pageKey=$pageKey")
 
-        // Return early if Flickr photo search call failed
+        val searchResponse = service.searchPhotosAsync(tags, pageKey)
+        val photosList: MutableList<Photo> = mutableListOf()
+
+        // Return early if search call failed
         if (searchResponse.stat != "ok") {
             Timber.e("Photo search failed with status: ${searchResponse.stat}")
             return listOf()
         }
 
-        val photosList = mutableListOf<Photo>()
+        // Asynchronously load sizes for every photo
+        coroutineScope {
+            searchResponse.data.photos.map { photo ->
+                async(Dispatchers.IO) {
+                    val sizes = loadSizesForPhoto(photo.id)
 
-        val coroutineScope = CoroutineScope(Job() + Dispatchers.IO)
-        val jobs = mutableListOf<Job>()
-
-        searchResponse.photos.photo.forEach { photo ->
-            jobs.add(coroutineScope.launch {
-                // Launch a new job for each sizes fetch
-                val getSizesResponse = FlickrApi.retrofitService.getSizesAsync(photo.id)
-
-                // Return early if Flickr sizes fetch call failed
-                if (getSizesResponse.stat != "ok") {
-                    Timber.e("Photo search failed with status: ${searchResponse.stat}")
-                    return@launch
+                    if (sizes.any { it.label === SizeLabel.LARGE } &&
+                        sizes.any { it.label === SizeLabel.LARGE_SQUARE }) {
+                        photosList.add(FlickrApiMapperImpl.mapApiPhotoDataToDomain(photo, sizes))
+                    }
                 }
-
-                var thumbnailUrl = ""
-                var fullscreenUrl = ""
-
-                getSizesResponse.sizes.size.forEach { size ->
-                    if (size.label === SizeLabel.LARGE_SQUARE) thumbnailUrl = size.source
-                    else if (size.label === SizeLabel.LARGE) fullscreenUrl = size.source
-                }
-
-                if (thumbnailUrl.isNotEmpty() && fullscreenUrl.isNotEmpty()) {
-                    photosList.add(
-                        Photo(
-                            photo.id,
-                            photo.title,
-                            photo.ownerName,
-                            thumbnailUrl,
-                            fullscreenUrl
-                        )
-                    )
-                }
-            })
+            }.awaitAll()
         }
-
-        jobs.forEach { it.join() }
 
         return photosList
     }
 
-    interface IOnLoadListener {
-        fun onLoadStarted()
-        fun onLoadFinished()
+    private suspend fun loadSizesForPhoto(photoId: Long): List<SizeData> {
+        Timber.d("loadSizesForPhoto: photoId=$photoId")
+
+        val response = service.getSizesAsync(photoId)
+
+        // Return early if Flickr sizes fetch call failed
+        if (response.stat != "ok") {
+            Timber.e("Photo search failed with status: ${response.stat}")
+            return listOf()
+        }
+
+        return response.data.sizes
     }
 }
